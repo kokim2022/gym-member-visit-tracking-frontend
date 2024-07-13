@@ -135,11 +135,10 @@ const setChartOptions = () => {
             <div class="card">
                 <div class="pb-5" style="display: flex; justify-content: space-between; align-items: center">
                     <div class="text-lg">
-                        <span class="italic">Sum of unique visit by Hour in {{ date.toLocaleDateString('en-GB') }}:</span>
+                        <span class="italic">Sum of member visit count by Hour in {{ date.toLocaleDateString('en-GB') }}:</span>
                         <span class="font-bold mx-2">
                             {{ totalUniqueVisitsByDay }}
                         </span>
-                        visits
                     </div>
                     <Calendar v-model="date" dateFormat="yy-mm-dd" />
                 </div>
