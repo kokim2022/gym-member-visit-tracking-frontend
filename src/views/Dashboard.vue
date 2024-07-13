@@ -1,119 +1,106 @@
 <script setup>
-import { onMounted, reactive, ref, watch } from 'vue';
-import { ProductService } from '@/service/ProductService';
-import { useLayout } from '@/layout/composables/layout';
+import { onMounted, ref } from 'vue';
+import { MemberService } from '../service/MemberService';
 
-const { isDarkTheme } = useLayout();
+const chartData = ref();
+const chartOptions = ref();
+const totalUniqueVisitsByDay = ref();
 
-const products = ref(null);
-const lineData = reactive({
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-        {
-            label: 'First Dataset',
-            data: [65, 59, 80, 81, 56, 55, 40],
-            fill: false,
-            backgroundColor: '#2f4860',
-            borderColor: '#2f4860',
-            tension: 0.4
-        },
-        {
-            label: 'Second Dataset',
-            data: [28, 48, 40, 19, 86, 27, 90],
-            fill: false,
-            backgroundColor: '#00bb7e',
-            borderColor: '#00bb7e',
-            tension: 0.4
-        }
-    ]
-});
-
-const lineOptions = ref(null);
-const productService = new ProductService();
+const memberService = new MemberService();
 
 onMounted(() => {
-    productService.getProductsSmall().then((data) => (products.value = data));
+    memberService.getUniqueVisitsByHour().then((uniqueVisitsByHour) => {
+        chartData.value = setChartData(uniqueVisitsByHour);
+        chartOptions.value = setChartOptions();
+    });
 });
 
-const applyLightTheme = () => {
-    lineOptions.value = {
+const formatHourSlot = (hourSlot) => {
+    const date = new Date(hourSlot);
+    const nextHourDate = new Date(date);
+    nextHourDate.setHours(date.getHours() + 1);
+
+    const formatTime = (date) => {
+        let hours = date.getHours();
+        const minutes = date.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
+        const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+        return `${hours}:${minutesStr} ${ampm}`;
+    };
+
+    const startTime = formatTime(date);
+    const endTime = formatTime(nextHourDate);
+
+    return `${startTime} - ${endTime}`;
+};
+
+const setChartData = (uniqueVisitsByHour) => {
+    totalUniqueVisitsByDay.value = uniqueVisitsByHour.reduce((sum, item) => sum + item.unique_visits, 0);
+
+    return {
+        labels: uniqueVisitsByHour.map((item) => formatHourSlot(item.hour_slot)),
+        datasets: [
+            {
+                label: 'Member Visit Count',
+                data: uniqueVisitsByHour.map((item) => item.unique_visits),
+                backgroundColor: ['rgba(6, 182, 212, 0.2)'],
+                borderColor: ['rgb(6, 182, 212)'],
+                borderWidth: 1
+            }
+        ]
+    };
+};
+
+const setChartOptions = () => {
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--p-text-color');
+    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
+    const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color');
+
+    return {
         plugins: {
             legend: {
                 labels: {
-                    color: '#495057'
+                    color: textColor
                 }
             }
         },
         scales: {
             x: {
                 ticks: {
-                    color: '#495057'
+                    color: textColorSecondary
                 },
                 grid: {
-                    color: '#ebedef'
+                    color: surfaceBorder
                 }
             },
             y: {
+                beginAtZero: true,
                 ticks: {
-                    color: '#495057'
+                    color: textColorSecondary
                 },
                 grid: {
-                    color: '#ebedef'
+                    color: surfaceBorder
                 }
             }
         }
     };
 };
-
-const applyDarkTheme = () => {
-    lineOptions.value = {
-        plugins: {
-            legend: {
-                labels: {
-                    color: '#ebedef'
-                }
-            }
-        },
-        scales: {
-            x: {
-                ticks: {
-                    color: '#ebedef'
-                },
-                grid: {
-                    color: 'rgba(160, 167, 181, .3)'
-                }
-            },
-            y: {
-                ticks: {
-                    color: '#ebedef'
-                },
-                grid: {
-                    color: 'rgba(160, 167, 181, .3)'
-                }
-            }
-        }
-    };
-};
-
-watch(
-    isDarkTheme,
-    (val) => {
-        if (val) {
-            applyDarkTheme();
-        } else {
-            applyLightTheme();
-        }
-    },
-    { immediate: true }
-);
 </script>
 
 <template>
     <div class="grid">
-        <div class="col-8">
+        <div class="col-12">
             <div class="card">
-                <h5>Sales Overview</h5>
-                <Chart type="line" :data="lineData" :options="lineOptions" />
+                <div class="text-lg flex">
+                    <div class="italic">Sum of unique visit by Hour in 12-07-2024:</div>
+                    <div class="font-bold ml-3">
+                        {{ totalUniqueVisitsByDay }}
+                    </div>
+                </div>
+                <Chart type="bar" :data="chartData" :options="chartOptions" />
             </div>
         </div>
     </div>
