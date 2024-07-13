@@ -10,8 +10,13 @@ export class MemberService {
         return await res.json();
     }
 
-    async getUniqueVisitsByHour() {
-        const res = await fetch(`${apiUrl}/unique_visits_by_hour`, { headers: { 'Cache-Control': 'no-cache' } });
+    async getUniqueVisitsByHour(selectedDate) {
+        const res = await fetch(`${apiUrl}/unique_visits_by_hour?selectedDate=${selectedDate}`, { headers: { 'Cache-Control': 'no-cache' } });
+        return await res.json();
+    }
+
+    async getUniqueVisitsByDayInCurrentMonth() {
+        const res = await fetch(`${apiUrl}/unique_visits_by_day_current_month`, { headers: { 'Cache-Control': 'no-cache' } });
         return await res.json();
     }
 }
