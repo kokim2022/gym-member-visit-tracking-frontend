@@ -145,11 +145,13 @@ const setChartOptions = () => {
                 </div>
                 <Chart type="bar" :data="chartDataByHour" :options="chartOptions" />
             </div>
+            <div class="text-center">Diagram - 1</div>
         </div>
         <div class="col-5">
             <div class="card">
                 <Chart type="bar" :data="chartDataByDay" :options="chartOptions" />
             </div>
+            <div class="text-center">Diagram - 2</div>
         </div>
     </div>
 </template>
